@@ -12,7 +12,7 @@ x_2 = data_table2.Var1;
 tempint2_data = data_table2.Var2;
 tempext2_data = data_table2.Var3;
 
-% Parametros Sol.1 y Sol.1
+% Parametros Sol.1 y Sol.1 (Función analítica)
 kc = 0.022;
 A = 0.5852;
 T_ext = 22;
@@ -32,7 +32,7 @@ for i = 1:tiempo
     T_int = calcular_T_int(T_int, kc, A, T_ext, z, dt, m, C);
 end
 
-% Parametros Sol.2 y Sol.2
+% Parametros Sol.2 y Sol.2 (Temperatura exterior) (Función analítica)
 T0 = 22.23;
 Tmax = 29.42;
 Tmin = 10.05;
@@ -49,7 +49,23 @@ for i = 1:length(tiempo2)-1
     T_ext2(i+1) = T0 + Amp * sin(w * tiempo2(i) + phi);
 end
 
-% Error experimental Sol. 1
+% Parametros Sol.2 y Sol.2 (Temperatura interior) (Función analítica)
+T02 = 7.9;
+Tmax2 = 27.25;
+Tmin2 = 7.9;
+T2 = 24 * 3600;
+Amp2 = (Tmax2 - Tmin2) / 2;
+phi2_start = -pi/2;
+phi2_end = asin((Tmax2 - Tmin2) / Amp2);
+w2 = 2 * pi / T2;
+dt2 = 1;
+
+tiempo3 = 0:dt2:T2;
+
+T_sin = Amp2 * sin(w2 * tiempo3 + phi2_start) + Tmin2;
+T_sin = T_sin + 10;
+
+% Error experimental Sol. 1 (Experimental vs. Analítica)
 n = min(length(tempint_data), length(T_int_valores));
 Error = 0;
 
@@ -60,13 +76,9 @@ end
 Error = Error / n * 100;
 fprintf("Error porcentual en el interior del cooler = %.2f %c\n", Error, "%");
 
-% Error experimental Sol. 2
+% Error experimental Sol. 2 (Experimental vs. Analítica)
 Error2 = 0;
-n = min(length(tempext2_data), length(T_ext2));
-
-for i = 1:n
-    Error2 = Error2 + abs(tempext2_data(i) - T_ext2(i)) / tempext2_data(i);
-end
+Error2 = Error2 + abs(tempint2_data(i) - T_sin(i)) / tempint2_data(i);
 
 Error2 = Error2 / n * 100;
 fprintf("Error porcentual en el exterior del cooler = %.2f %c\n", Error2, "%");
@@ -80,15 +92,16 @@ plot(x_data, tempext_data);
 plot(x_2, tempint2_data);
 plot(x_2, tempext2_data);
 plot(tiempo2/3600, T_ext2);
+plot(tiempo3/3600, T_sin);
 hold off
 
 xlim([0.1 24])
 xlabel('Tiempo (h)');
 ylabel('Temperatura (ºC)');
 title('Temperatura vs. Tiempo');
-legend("T(t) con Δt = 1 s", "T_{ext} = 22ºC", "Temp. Interior Exp. 1", "Temp. Exterior Exp. 1", "Temp. Interior Exp. 2", "Temp. Exterior Exp. 2", "Temp. Exterior Ideal")
+legend("T(t) con Δt = 1 s", "T_{ext} = 22ºC", "Temp. Interior Exp. 1", "Temp. Exterior Exp. 1", "Temp. Interior Exp. 2", "Temp. Exterior Exp. 2", "Temp. Exterior Ideal", "Temp. Interior Ideal")
 
-% Función
+% Función Temperatura interior Analítica
 function T_int_final = calcular_T_int(T_int, kc, A, T_ext, z, dt, m, C)
     n = length(m);
     suma_mjCj = 0;
